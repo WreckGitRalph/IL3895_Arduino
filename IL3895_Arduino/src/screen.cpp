@@ -23,7 +23,7 @@ SPISettings devSPI(SPI_FREQ,MSBFIRST,SPI_MODE0);
 #define EPD_DUMMY_PERIOD    0x15  
 #define EPD_GATE_PERIOD     0x0B
 
-//fast update waveform LUT for GDEM0154E97LT
+//default update waveform LUT for GDEM0154E97LT
 const unsigned char LUT[]=
 {						
 0x80,	0xA5,	0x10,	0x0,	0x0,	0x0,	0x0,
@@ -42,6 +42,12 @@ const unsigned char LUT[]=
 
 #endif
 
+#ifdef BUFFER
+//can't fit a whole frame in memory on most AVRs, maybe use [external?] EEPROM as swap space
+#define NUM_SWAPS 8
+#define BUFFER_SIZE (ALLSCREEN_BYTES/NUM_SWAPS)
+#endif
+
 /*
 * Function name: EpaperIO_Init
  * Description : Initialize IO interface related to e-paper
@@ -56,7 +62,6 @@ void EpaperIO_Init(void)
     //Initialize additional pins BUSY, DC, and RESET
     pinMode(Epaper_BUSY,INPUT);
     pinMode(Epaper_DC, OUTPUT);
-//    pinMode(Epaper_RESET, OUTPUT);
 
 
 }
@@ -90,7 +95,7 @@ void Epaper_Spi_WriteByte(u8 txData)
 void Epaper_READBUSY(void)
 { 
   while(1)
-  {	 //=1 BUSY
+  {	 
      if(digitalRead(Epaper_BUSY)==0) break;
 		 delayMicroseconds(5) ;
   }  
@@ -141,8 +146,7 @@ void Epaper_Update(void)
     Epaper_Write_Data(0xC7); 
     //perform update
     Epaper_Write_Command(CMD_UPDATE);
-    Epaper_READBUSY();
-    delay(100); 	
+    Epaper_READBUSY();	
 }
 
 /*
@@ -159,21 +163,47 @@ void Epaper_DeepSleep(void)
    //Epaper_EN =0;///Epaper VCC Off
    delay(100); 	
 }
-
+/*
+* Function name: Set_Write_Window
+ * Description : Define a window for writing display data. Coordinates start at zero.
+ * Enter : x1: starting x coordinate
+ *          x2: ending x coordinate
+ *          y1: starting y coordinate
+ *          y2: ending y coordinate
+ * Output : None
+ */	
+void Set_Write_Window(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2){
+    //x is addressed in 19 bytes, so just use the closest byte
+    //maybe do something later to skip the extra bits instead
+    uint8_t x_strt=x1/8;
+    uint8_t x_end=x2/8;
+    
+    uint8_t y_strt1=(y1>>8)&0xFF;
+    uint8_t y_strt2=y1&0xFF; 
+    uint8_t y_end1=(y2>>8)&0xFF;
+    uint8_t y_end2=y2&0xFF;
+    
+    Epaper_Write_Command(CMD_X_POS);  
+     Epaper_Write_Data(x_strt);   
+     Epaper_Write_Data(x_end);    
+	
+    Epaper_Write_Command(CMD_Y_POS);         
+     Epaper_Write_Data(y_strt1);   
+     Epaper_Write_Data(y_strt2);   
+     Epaper_Write_Data(y_end1);   
+     Epaper_Write_Data(y_end2);  
+}
 /*
 * Function name: Epaper_Init
  * Description : Electronic paper initialization program, sending commands and data to e-paper
  * Enter : None
  * Output : None
  */	
+
 void Epaper_Init(void)
 {  
 
-    delay(100); 
-    //digitalWrite(Epaper_RESET,LOW);     
-    delay(10); 
-    //digitalWrite(Epaper_RESET,HIGH);  
-    delay(10);  
+//    delay(10);  
     Epaper_READBUSY();
     Epaper_Write_Command(CMD_RESET); 
     Epaper_READBUSY();
@@ -188,19 +218,15 @@ void Epaper_Init(void)
      Epaper_Write_Data(0x97); //152 MUX gate lines
      Epaper_Write_Data(0x00); //152 MUX gate lines
      Epaper_Write_Data(0x00); //gate direction=0, scan mode=0, scan direction=0
+     
+    Epaper_Write_Command(CMD_TMP_CTRL);
+     Epaper_Write_Data(0x80); //use internal temperature sensor
 	
     Epaper_Write_Command(CMD_DATA_ENTRY_MODE);   
      Epaper_Write_Data(0x11);   //address counter auto-increments from top left to bottom right 
-		
-    Epaper_Write_Command(CMD_X_POS);  
-     Epaper_Write_Data(0x00);   //x starts at 0
-    Epaper_Write_Data(0x12);    //x ends at (18+1)*8=152
-	
-    Epaper_Write_Command(CMD_Y_POS); //set Ram-Y address start/end position          
-     Epaper_Write_Data(0x00);   //y starts 0x0097
-    Epaper_Write_Data(0x97);    //y starts 0x0097
-     Epaper_Write_Data(0x00);   //y ends at 0x0000
-    Epaper_Write_Data(0x00);    //y ends at 0x0000
+
+    Set_Write_Window(0,151,0,151);
+     
     Epaper_Write_Command(CMD_BORDER_CTRL);
      Epaper_Write_Data(0x01);	//use GS transition LH for VBD
 }
@@ -289,14 +315,28 @@ void Epaper_Load_Image(u8 *datas,u32 num,u8 mode)
 }
 
 /*
-* Function Name: Display_All_White
- * Description : refresh display full white
- * Input : No
+* Function Name: Fill_Screen
+ * Description : fill display with a solid colour
+ * Input : colour: 0 for white, 1 for black, 2 for grey     <- put this in a define
  * Output : None
  */	
-void Display_All_White(void)
-{
-  u32 i,j; 
+void Fill_Screen(u8 colour){
+  u32 i,j;
+  uint8_t fillData;
+  
+  switch(colour){
+       //white
+      case 0:
+          fillData=0xFF;
+          break;
+      //black
+      case 1:
+          fillData=0x00;
+          break;
+     //grey
+      case 2:
+          fillData=0xAA;
+  }
 
   //reset display counter
     Epaper_Write_Command(CMD_X_CNT);     
@@ -304,44 +344,17 @@ void Display_All_White(void)
     Epaper_Write_Command(CMD_Y_CNT);       
     Epaper_Write_Data(0x97);
     Epaper_Write_Data(0x00);
-
 	
+    //make the write window updatable
     Epaper_READBUSY();
     Epaper_Write_Command(CMD_WRITE_RAM);   
     for(i=0;i<152;i++){
         for(j=0;j<19;j++){
-            Epaper_Write_Data(0xFF);
+            Epaper_Write_Data(fillData);
         }
     }
 Epaper_Update();
 	 
 }
 
-/*
-* Function Name: Display_All_Black
- * Description : refresh display black
- * Input : No
- * Output : None
- */	
-void Display_All_Black(void)
-{
-  u32 i,j; 
 
-  //reset display counter
-    Epaper_Write_Command(CMD_X_CNT);     
-    Epaper_Write_Data(0x00);	
-    Epaper_Write_Command(CMD_Y_CNT);       
-    Epaper_Write_Data(0x97);
-    Epaper_Write_Data(0x00);
-
-	
-    Epaper_READBUSY();
-    Epaper_Write_Command(CMD_WRITE_RAM);   
-    for(i=0;i<152;i++){
-        for(j=0;j<19;j++){
-            Epaper_Write_Data(0x00);
-     }
-   }
-	 Epaper_Update();
-
-}

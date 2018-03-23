@@ -12,30 +12,18 @@ typedef unsigned char u8;
 typedef unsigned long int u32;
 
 #define __AVR_ATmega328P__
-#define  DKE154    
+#define  GDEM0154E97LT 
+
 #define  MONO 1
 #define  RED  2
 
-//SPI settings
-#define SPI_FREQ    10000  //10 KHz, from STM32 sample. max is 20MHz
-
-//pin definitions
-#define  Epaper_BUSY   8       //high signifies display is busy
-//#define Epaper_RESET  7        //active low reset
-#define Epaper_DC     9       //data/command control pin
-#define Epaper_CS     10      //SS
-//#define Epaper_SCK    13    
-//#define Epaper_SDO    11   //MOSI
-
-#ifdef DKE154
-//////////////////////////////////////////
-//GDEM0154E97LT device-specific settings//
-//////////////////////////////////////////
-
+/////////////////////////////
+//display-specific settings//
+/////////////////////////////
+#ifdef GDEM0154E97LT
 #define MAX_LINE_BYTES    19
 #define MAX_COLUMN_BYTES	152
 #define ALLSCREEN_BYTES   2888
-
 #endif
 
 #ifdef DKE213_1
@@ -61,6 +49,23 @@ typedef unsigned long int u32;
 #define MAX_LINE_BYTES    50
 #define MAX_COLUMN_BYTES  300
 #define ALLSCREEN_BYTES   15000
+#endif
+
+/////////////////////////////////////
+//microcontroller-specific settings//
+/////////////////////////////////////
+#ifdef __AVR_ATmega328P__
+//SPI settings
+#define SPI_FREQ    10000  //10 KHz, from STM32 sample. max is 20MHz
+
+//pin definitions
+#define  Epaper_BUSY   8       //high signifies display is busy
+#define Epaper_DC     9       //data/command control pin
+#define Epaper_CS     10      //SS
+//#define Epaper_SCK    13    
+//#define Epaper_SDO    11   //MOSI
+
+#define  BUFFER
 #endif
 
 //SPI commands
@@ -95,7 +100,6 @@ typedef unsigned long int u32;
 #define CMD_ANALOG_CTRL 0x74            //set analog block control
 #define CMD_DIGITAL_CTRL 0x7E           //set digital block control
 
-
 void EpaperIO_Init(void);
 void Epaper_READBUSY(void);
 void Epaper_Write_Command(u8 cmd);
@@ -106,8 +110,7 @@ void Epaper_Load_Image(u8 *datas,u32 num,u8 mode);
 void Epaper_Update(void);
 void Epaper_DeepSleep(void);
 
-void Display_All_Black(void);
-void Display_All_White(void);
+void Fill_Screen(u8 colour);
 
 #endif /* SCREEN_H */
 

@@ -25,9 +25,9 @@ void IL3895_init(void){
 void IL3895_test(void){
   while(1)
   {
-    Display_All_Black();  
+    Fill_Screen(1);  
     delay(500);                                                      
-    Display_All_White();
+    Fill_Screen(0);
     delay(500);
   }
 }
