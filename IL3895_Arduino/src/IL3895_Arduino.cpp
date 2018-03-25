@@ -23,7 +23,7 @@ void IL3895_init(void){
 
 /*
 * Function Name: Write_Char
- * Description : write a single 8x8 character at the given coordinates 
+ * Description : write a single character at the given coordinates 
  * Input : x - x-coordinate of the top left corner
  *          y - y-coordinate of the top left corner
  *          charByte - ASCII character to display
@@ -65,9 +65,7 @@ void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
     }
 
     *x+=(charLen*8);
-        Serial.print(*x);
-        Serial.print(",");
-        Serial.println(*y);
+
 }
 
 /*
