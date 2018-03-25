@@ -1,4 +1,5 @@
 /*
+ * Marcus Niekraszewicz
  * Port from STM32 to Arduino Uno of the EPAPER initialization example from GoodDisplay.
  * Created on March 11, 2018, 6:20 PM
  */
@@ -202,8 +203,8 @@ void Set_Counter(uint16_t x, uint16_t y){
  * Output : None
  */	
 void Set_Write_Window(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2){
-    //x is addressed in 19 bytes, so just use the closest byte
-    //maybe do something later to skip the extra bits instead
+    //x is addressed in 19 bytes, so round down to the closest byte
+    //maybe do something later to mask the extra bits as well
     uint8_t x_strt=x1/8;
     uint8_t x_end=x2/8;
     
@@ -257,9 +258,10 @@ void Epaper_Init(void)
     Epaper_Write_Command(CMD_DATA_ENTRY_MODE);   
      Epaper_Write_Data(0x03);   //address counter auto-increments from top left to bottom right 
 
-     //////////!!!!!!!!!!!/////////////////
-     //////////!!!!!!!!!!//////////////////
-    Set_Write_Window(0,151,0,151); //params here should be dynamic
+     //////////////////////////////////////////
+     //todo:make initial window based on device size
+     //////////////////////////////////////////
+    Set_Write_Window(0,151,0,151); 
      
     Epaper_Write_Command(CMD_BORDER_CTRL);
      Epaper_Write_Data(0x01);	//use GS transition LH for VBD
@@ -346,29 +348,13 @@ void Epaper_Load_Image(u8 *datas,u32 num,u8 mode)
 
 /*
 * Function Name: Fill_Screen
- * Description : fill screen with a solid colour
- * Input : colour: 0 for white, 1 for black, 2 for grey     <- put this in a define
+ * Description : fill screen with a single colour
+ * Input : data to fill screen with
  * Output : None
  */	
-void Fill_Screen(u8 colour){
-  u32 i,j;
-  uint8_t fillData;
-  
-  switch(colour){
-       //white
-      case 0:
-          fillData=0xFF;
-          break;
-      //black
-      case 1:
-          fillData=0x00;
-          break;
-     //grey
-      case 2:
-          fillData=0xAA;
-  }
-
-    //Set_Counter(0,0);
+void Fill_Screen(uint8_t colour){
+  uint16_t i,j;
+        
     Set_Write_Window(0,151,0,151);
 	
     Epaper_READBUSY();
@@ -376,7 +362,7 @@ void Fill_Screen(u8 colour){
     Epaper_Write_Command(CMD_WRITE_RAM);   
     for(i=0;i<152;i++){
         for(j=0;j<19;j++){
-            Epaper_Write_Data(fillData);
+            Epaper_Write_Data(colour);
         }
     }
 Epaper_Update();

@@ -18,9 +18,9 @@ typedef unsigned long int u32;
 
 #define  MONO 1
 #define  RED  2
-#define  WHITE 0
-#define  BLACK 1
-#define  GREY 2
+#define  WHITE 0xFF
+#define  BLACK 0x00
+#define  GREY 0xAA
 
 /////////////////////////////
 //display-specific settings//
