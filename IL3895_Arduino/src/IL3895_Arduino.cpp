@@ -115,14 +115,9 @@ void Draw_Rectangle(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t 
  * Put driver into test mode indefinitely
  */
 void IL3895_test(void){
-    
-  //char testString[] = "This Is A Test";
   
   while(1)
   { 
-    
-    int i;
-    int j;
       
     Write_String(32, 64, BLACK, "This Is A Test");
     Epaper_Update();
@@ -133,25 +128,8 @@ void IL3895_test(void){
     delay(500);   
 
     //draw some squares
-    Draw_Rectangle(32,96,32,96,WHITE);
-    
- /*   Epaper_Write_Command(CMD_WRITE_RAM);   
-    for(i=0;i<64;i++){
-        for(j=0;j<(64/8);j++){
-            Epaper_Write_Data(0x00);
-        }
-    }
- */
-    
+    Draw_Rectangle(32,96,32,96,WHITE);   
     Draw_Rectangle(64,128,64,128,BLACK);
-    
-/*    Epaper_Write_Command(CMD_WRITE_RAM);   
-    for(i=0;i<=64;i++){
-        for(j=0;j<=(64/8);j++){
-            Epaper_Write_Data(0x00);
-        }
-    }
- */
  
     Epaper_Update();
  
