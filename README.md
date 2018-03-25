@@ -5,7 +5,7 @@ I'm leaving out common features that I don't plan on using, but if anyone ends u
 ## Planned:
 - [x] Port the STM32 initialization example to Arduino
 - [x] Initialize GDEM0154E97LT with provided LUT and recommended settings
-- [ ] Implement function to draw text
+- [x] Implement function to draw text
 - [ ] Implement function to display 152x152 monochrome bitmap *(from external ROM if I can't cram what I need onto the AVR)*
 - [ ] Implement functions to draw pixel, draw line, draw rectangle
 - [ ] Add a single frame display buffer

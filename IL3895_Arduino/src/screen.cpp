@@ -11,7 +11,7 @@ char vcom=0x52;	//-1.55V
 extern u8 Epaper_border;
 SPISettings devSPI(SPI_FREQ,MSBFIRST,SPI_MODE0);
 
-#ifdef DKE154
+#ifdef GDEM0154E97LT
 //////////////////////////////////////////
 //GDEM0154E97LT device-specific settings//
 //////////////////////////////////////////
@@ -163,6 +163,35 @@ void Epaper_DeepSleep(void)
    //Epaper_EN =0;///Epaper VCC Off
    delay(100); 	
 }
+
+/*
+* Function name: Set_Counter
+ * Description : Set display RAM counter. Coordinates start at zero.
+ * Enter : x: x coordinate
+ *          y: y coordinate
+ * Output : None
+ */	
+void Set_Counter(uint16_t x, uint16_t y){
+    //x is addressed in 19 bytes, so just use the closest byte
+    //maybe do something later to skip the extra bits instead
+    if(x>151){
+        x=151;
+    }
+    if(y>151){
+        y=151;
+    }
+    x=x/8;
+    
+    uint8_t y1=y&0xFF;
+    uint8_t y2=(y>>8)&0xFF; 
+    
+    Epaper_Write_Command(CMD_X_CNT);     
+    Epaper_Write_Data(x);	
+    Epaper_Write_Command(CMD_Y_CNT);       
+    Epaper_Write_Data(y1);
+    Epaper_Write_Data(y2);
+}
+
 /*
 * Function name: Set_Write_Window
  * Description : Define a window for writing display data. Coordinates start at zero.
@@ -178,11 +207,11 @@ void Set_Write_Window(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2){
     uint8_t x_strt=x1/8;
     uint8_t x_end=x2/8;
     
-    uint8_t y_strt1=(y1>>8)&0xFF;
-    uint8_t y_strt2=y1&0xFF; 
-    uint8_t y_end1=(y2>>8)&0xFF;
-    uint8_t y_end2=y2&0xFF;
-    
+    uint8_t y_strt1=y1&0xFF; 
+    uint8_t y_strt2=(y1>>8)&0xFF;
+    uint8_t y_end1=y2&0xFF;
+    uint8_t y_end2=(y2>>8)&0xFF;
+        
     Epaper_Write_Command(CMD_X_POS);  
      Epaper_Write_Data(x_strt);   
      Epaper_Write_Data(x_end);    
@@ -192,7 +221,10 @@ void Set_Write_Window(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2){
      Epaper_Write_Data(y_strt2);   
      Epaper_Write_Data(y_end1);   
      Epaper_Write_Data(y_end2);  
+     Set_Counter(x1,y1);
+     
 }
+
 /*
 * Function name: Epaper_Init
  * Description : Electronic paper initialization program, sending commands and data to e-paper
@@ -223,9 +255,11 @@ void Epaper_Init(void)
      Epaper_Write_Data(0x80); //use internal temperature sensor
 	
     Epaper_Write_Command(CMD_DATA_ENTRY_MODE);   
-     Epaper_Write_Data(0x11);   //address counter auto-increments from top left to bottom right 
+     Epaper_Write_Data(0x03);   //address counter auto-increments from top left to bottom right 
 
-    Set_Write_Window(0,151,0,151);
+     //////////!!!!!!!!!!!/////////////////
+     //////////!!!!!!!!!!//////////////////
+    Set_Write_Window(0,151,0,151); //params here should be dynamic
      
     Epaper_Write_Command(CMD_BORDER_CTRL);
      Epaper_Write_Data(0x01);	//use GS transition LH for VBD
@@ -288,11 +322,7 @@ void Epaper_Load_Image(u8 *datas,u32 num,u8 mode)
   u32 templine=0;
 
   //reset display counter
-    Epaper_Write_Command(CMD_X_CNT);     
-    Epaper_Write_Data(0x00);	
-    Epaper_Write_Command(CMD_Y_CNT);       
-    Epaper_Write_Data(0x97);
-    Epaper_Write_Data(0x00);
+  Set_Counter(0,0);
 	
     Epaper_READBUSY();
     
@@ -316,7 +346,7 @@ void Epaper_Load_Image(u8 *datas,u32 num,u8 mode)
 
 /*
 * Function Name: Fill_Screen
- * Description : fill display with a solid colour
+ * Description : fill screen with a solid colour
  * Input : colour: 0 for white, 1 for black, 2 for grey     <- put this in a define
  * Output : None
  */	
@@ -338,15 +368,11 @@ void Fill_Screen(u8 colour){
           fillData=0xAA;
   }
 
-  //reset display counter
-    Epaper_Write_Command(CMD_X_CNT);     
-    Epaper_Write_Data(0x00);	
-    Epaper_Write_Command(CMD_Y_CNT);       
-    Epaper_Write_Data(0x97);
-    Epaper_Write_Data(0x00);
+    //Set_Counter(0,0);
+    Set_Write_Window(0,151,0,151);
 	
-    //make the write window updatable
     Epaper_READBUSY();
+    
     Epaper_Write_Command(CMD_WRITE_RAM);   
     for(i=0;i<152;i++){
         for(j=0;j<19;j++){
@@ -356,5 +382,3 @@ void Fill_Screen(u8 colour){
 Epaper_Update();
 	 
 }
-
-

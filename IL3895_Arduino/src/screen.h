@@ -7,6 +7,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include <Arduino.h>
+
 //some types used in the original driver
 typedef unsigned char u8;
 typedef unsigned long int u32;
@@ -16,6 +18,9 @@ typedef unsigned long int u32;
 
 #define  MONO 1
 #define  RED  2
+#define  WHITE 0
+#define  BLACK 1
+#define  GREY 2
 
 /////////////////////////////
 //display-specific settings//
@@ -104,12 +109,13 @@ void EpaperIO_Init(void);
 void Epaper_READBUSY(void);
 void Epaper_Write_Command(u8 cmd);
 void Epaper_Write_Data(u8 data);
+void Set_Write_Window(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2);
 void Epaper_Init(void);
 void LUT_Written_by_MCU(void);
 void Epaper_Load_Image(u8 *datas,u32 num,u8 mode);
 void Epaper_Update(void);
 void Epaper_DeepSleep(void);
-
+void Set_Counter(uint16_t x, uint16_t y);
 void Fill_Screen(u8 colour);
 
 #endif /* SCREEN_H */
