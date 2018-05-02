@@ -66,14 +66,31 @@ typedef unsigned long int u32;
 //pin definitions
 #define  Epaper_BUSY   8       //high signifies display is busy
 #define Epaper_DC     9       //data/command control pin
-#define Epaper_CS     10      //SS
+#define Epaper_CS     29      //SS
 //#define Epaper_SCK    13    
 //#define Epaper_SDO    11   //MOSI
 
 #define  BUFFER
 #endif
 
+#ifdef __AVR_ATmega168P__
+//SPI settings
+#define SPI_FREQ    10000  //10 KHz, from STM32 sample. max is 20MHz
+
+//pin definitions
+#define  Epaper_BUSY   8       //high signifies display is busy
+#define Epaper_DC     9       //data/command control pin
+#define Epaper_CS     10      //SS
+//#define Epaper_SCK    13    
+//#define Epaper_SDO    11   //MOSI
+
+#undef  BUFFER
+#endif
+
+
+/////////////////////////////////////
 //SPI commands
+/////////////////////////////////////
 #define CMD_DRIVER_OUTPUT 0x01          //gate setting
 #define CMD_GATE_V 0x03                 //set gate related driving voltage
 #define CMD_SRC_V 0x04                  //set source output voltage magnitude
