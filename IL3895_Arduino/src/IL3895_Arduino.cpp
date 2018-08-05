@@ -9,59 +9,96 @@
 #include "screen.h"
 #include "IL3895_Arduino.h"
 #include "font.h"
+#include <avr/pgmspace.h>
+
+enum orientation global_orientation;
 
 /*
  * IL3895_init
  * Initialize the display
  * Future: take display model as argument, set config appropriately
  */
-void IL3895_init(void){
+void IL3895_init(enum orientation init_orientation){
     EpaperIO_Init(); 
     Epaper_Init(); 
     LUT_Written_by_MCU();
+    global_orientation=init_orientation;
 }
 
 /*
 * Function Name: Write_Char
  * Description : write a single character at the given coordinates 
- * Input : x - x-coordinate of the top left corner
- *          y - y-coordinate of the top left corner
+ * Input : x - x-coordinate of the top left corner, in bits
+ *          y - y-coordinate of the top left corner, in bits
  *          charByte - ASCII character to display
  * Output : None
  */
 void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
+   
+    Serial.print(inChar);
+    Serial.print(":");
     
-    uint8_t charLen=sizeof(font8x11[0][0]);
-    uint8_t charHeight=(sizeof(font8x11[0]))/charLen;
-            
+
+    //fonts start at ASCII 32
+    inChar-=32;
+    uint8_t charIndex;	//index to font entry in fontDescriptors array
+    uint8_t charLen;	//character width on a vertially oriented display, in bytes
+    uint8_t charHeight;	//character height on a vertically oriented display, in bits
+    uint16_t charOffset;	//offset in font array
+
+    switch (global_orientation){
+	    case VERTICAL:
+		charIndex=inChar;
+		charLen=(((pgm_read_byte(&fontDescriptors[inChar].charWidth))-1)/8)+1; 
+    		charHeight=pgm_read_byte(&fontDescriptors[inChar].charHeight);
+		charOffset=pgm_read_word(&fontDescriptors[inChar].offset);
+		break;
+	    case HORIZONTAL:
+		charIndex=inChar+(fontInfo.endCharacter)-32;
+		charLen=(((pgm_read_byte(&fontDescriptors[charIndex].charHeight))-1)/8)+1;	
+		charHeight=pgm_read_byte(&fontDescriptors[charIndex].charWidth);
+		uint16_t addOffset=(pgm_read_word(&fontDescriptors[(fontInfo.endCharacter)-32].offset))+15;	
+		charOffset=(pgm_read_word(&fontDescriptors[charIndex].offset))+addOffset;
+		break;
+    }
+
+    Serial.print(charIndex);
+    Serial.print("\n");
+
+	
     //wrap if x is off the screen
     while(*x>(151-8)){
         *y+=charHeight;
         *x-=151;
     }
-    if((*y>151)||(32>inChar>126)){
+    //do nothing if y is off the screen, or if inchar is invalid
+    if((*y>151)||(32>inChar>223)){
         return;
     }
     
     //set write window and counter
-    Set_Write_Window(*x, *x, *y, (*y+charHeight));
-    
-    //fonts start at ASCII 33
-    inChar-=32;
+    Set_Write_Window(*x, *x+((charLen-1)*8), *y, (*y+charHeight));
     
     Epaper_Write_Command(CMD_WRITE_RAM);
+    
     uint8_t i;
-    for(i=0;i<charHeight;i++){
-         
-        uint8_t printChar;
-        if(colour==BLACK){
-            printChar=~(font8x11[inChar][i]);
-        }else{
-            printChar=font8x11[inChar][i];
-        }
+    uint8_t j;
+    uint16_t readIndex=charOffset;	//index in font array of byte to read
 
-        Epaper_Write_Data(printChar);
-        
+    for(i=0;i<charHeight;i++){
+	    for(j=0;j<charLen;j++){
+
+        	uint8_t printChar;
+        	if(colour==BLACK){
+            		printChar=~(pgm_read_byte(&font[readIndex]));
+        	}else{
+            		printChar=pgm_read_byte(&font[readIndex]);
+        	}
+
+        	Epaper_Write_Data(printChar);
+
+		readIndex++;
+	   }
     }
 
     *x+=(charLen*8);

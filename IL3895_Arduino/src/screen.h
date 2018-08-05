@@ -13,7 +13,6 @@
 typedef unsigned char u8;
 typedef unsigned long int u32;
 
-#define __AVR_ATmega328P__
 #define  GDEM0154E97LT 
 
 #define  MONO 1
@@ -66,7 +65,7 @@ typedef unsigned long int u32;
 //pin definitions
 #define  Epaper_BUSY   8       //high signifies display is busy
 #define Epaper_DC     9       //data/command control pin
-#define Epaper_CS     29      //SS
+#define Epaper_CS     10      //SS
 //#define Epaper_SCK    13    
 //#define Epaper_SDO    11   //MOSI
 
@@ -78,9 +77,9 @@ typedef unsigned long int u32;
 #define SPI_FREQ    10000  //10 KHz, from STM32 sample. max is 20MHz
 
 //pin definitions
-#define  Epaper_BUSY   8       //high signifies display is busy
-#define Epaper_DC     9       //data/command control pin
-#define Epaper_CS     10      //SS
+#define  Epaper_BUSY  7      //high signifies display is busy (PD7)
+#define Epaper_DC     5       //data/command control pin (PD5)
+#define Epaper_CS     6      //SS (PD6)
 //#define Epaper_SCK    13    
 //#define Epaper_SDO    11   //MOSI
 

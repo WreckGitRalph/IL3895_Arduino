@@ -63,12 +63,13 @@ void EpaperIO_Init(void)
     //Initialize additional pins BUSY, DC, and RESET
     pinMode(Epaper_BUSY,INPUT);
     pinMode(Epaper_DC, OUTPUT);
+    pinMode(Epaper_CS,OUTPUT);
 
 
 }
 
 /*
-* Function name: SPI1_WriteByte
+* Function name: Epaper_Spi_WriteByte
  * Description: SPIx reads and writes one byte
  * Input :TxData: bytes to be written
  * Output : Return value: bytes read
@@ -88,7 +89,7 @@ void Epaper_Spi_WriteByte(u8 txData)
 }
 
 /*
-* Function name: HalLcd_READBUSY
+* Function name: Epaper_READBUSY
  * Description : Wait for e-paper busy signal to change from high to low
  * Input : No
  * Output : None

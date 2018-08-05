@@ -6,12 +6,18 @@
 
 #include "screen.h"
 
+enum orientation {
+	VERTICAL=0,
+	HORIZONTAL=1
+	};
+
 /*
  * IL3895_init
  * Initialize the display
+ * Input: rotation - HORIZONTAL, VERTICAL
  * Future: take display model as argument, set config appropriately
  */
-void IL3895_init(void);
+void IL3895_init(enum orientation init_orientation);
 
 /*
  * Epaper_Update
