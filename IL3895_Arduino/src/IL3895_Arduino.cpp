@@ -35,10 +35,6 @@ void IL3895_init(enum orientation init_orientation){
  */
 void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
    
-    Serial.print(inChar);
-    Serial.print(":");
-    
-
     //fonts start at ASCII 32
     inChar-=32;
     uint8_t charIndex;	//index to font entry in fontDescriptors array
@@ -54,16 +50,13 @@ void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
 		charOffset=pgm_read_word(&fontDescriptors[inChar].offset);
 		break;
 	    case HORIZONTAL:
-		charIndex=inChar+(fontInfo.endCharacter)-32;
+		charIndex=inChar+(fontInfo.endCharacter)-31;
 		charLen=(((pgm_read_byte(&fontDescriptors[charIndex].charHeight))-1)/8)+1;	
 		charHeight=pgm_read_byte(&fontDescriptors[charIndex].charWidth);
-		uint16_t addOffset=(pgm_read_word(&fontDescriptors[(fontInfo.endCharacter)-32].offset))+15;	
+		uint16_t addOffset=(pgm_read_word(&fontDescriptors[(fontInfo.endCharacter)-32].offset))+30;	
 		charOffset=(pgm_read_word(&fontDescriptors[charIndex].offset))+addOffset;
 		break;
     }
-
-    Serial.print(charIndex);
-    Serial.print("\n");
 
 	
     //wrap if x is off the screen
@@ -77,7 +70,15 @@ void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
     }
     
     //set write window and counter
-    Set_Write_Window(*x, *x+((charLen-1)*8), *y, (*y+charHeight));
+    switch (global_orientation){
+	    case VERTICAL:
+	    	Set_Write_Window(*x, *x+((charLen-1)*8), *y, (*y+charHeight));
+		break;
+	    case HORIZONTAL:
+		Set_Write_Window(*x, *x+((charLen-1)*8), (*y-charHeight), *y);
+		break;
+    }
+	
     
     Epaper_Write_Command(CMD_WRITE_RAM);
     
@@ -101,8 +102,14 @@ void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
 	   }
     }
 
-    *x+=(charLen*8);
-
+    switch (global_orientation){
+	    case VERTICAL:
+    		*x+=(charLen*8);
+		break;
+	    case HORIZONTAL:
+		*y-=(charHeight);
+		break;
+    }
 }
 
 /*

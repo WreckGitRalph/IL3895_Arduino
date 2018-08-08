@@ -39,6 +39,9 @@ void IL3895_test(void);
  *          colour - BLACK, WHITE
  *          inString - ASCII string to write
  * Output : None
+ * Note: Co-ordinates do not change relative to the screen
+ * 	orientation, but the position top left corner of the 
+ * 	string does.
  */
 void Write_String(uint16_t x, uint16_t y, uint8_t colour, char inString[]);
 
