@@ -10,6 +10,7 @@
 #include "IL3895_Arduino.h"
 #include "font.h"
 #include <avr/pgmspace.h>
+#include "images.h"
 
 enum orientation global_orientation;
 
@@ -59,10 +60,14 @@ void Write_Char(uint16_t *x, uint16_t *y, uint8_t colour, uint8_t inChar){
     }
 
 	
-    //wrap if x is off the screen
-    while(*x>(151-8)){
+    //wrap if x or y is off the screen
+    if(*x>(151-8)){
         *y+=charHeight;
         *x-=151;
+    }
+    if(*y<charHeight){
+	    *x+=(charLen*8);
+	    *y=151;
     }
     //do nothing if y is off the screen, or if inchar is invalid
     if((*y>151)||(32>inChar>223)){
@@ -130,7 +135,7 @@ void Write_String(uint16_t x, uint16_t y, uint8_t colour, char inString[]){
 }
 
 /*
-* Function Name: Draw rectangle
+* Function Name: Draw_Rectangle
  * Description : Draw a rectangle of a defined size at the given coordinates 
  * Input : x - x1- starting x coordinate of the rectangle
  *              x2- ending x coordinate of the rectangle
@@ -152,6 +157,32 @@ void Draw_Rectangle(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t 
         }
     }
  
+}
+
+/*
+ * Function Name: Draw_Image_Fullscreen
+ * Description:   Print a fullscreen image to the display. The image must be stored as a bitmask
+ * 		  byte array in images.h
+ * 		  Image is only assumed to be fullscreen
+ * Input: img - the name of the image
+ * Output: None
+ */
+
+void Draw_Image_Fullscreen(uint8_t image){
+
+	Epaper_Write_Command(CMD_WRITE_RAM);
+	uint16_t readIndex=info[image].offset;
+
+	for(uint16_t i=0;i<=(info[image].width)/8;i++){
+		for(uint16_t j=0;j<info[image].height;j++){
+
+			uint8_t printByte=~pgm_read_byte(&bitmaps[readIndex]);
+			
+			Epaper_Write_Data(printByte);
+
+                	readIndex++;
+		}	
+	}
 }
 
 /*

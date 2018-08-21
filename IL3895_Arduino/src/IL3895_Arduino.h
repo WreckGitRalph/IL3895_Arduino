@@ -56,3 +56,13 @@ void Write_String(uint16_t x, uint16_t y, uint8_t colour, char inString[]);
  * Output : None
  */
 void Draw_Rectangle(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2, uint8_t colour);
+
+/*
+ * Function Name: Draw_Image_Fullscreen
+ * Description:   Print a 151x151 image to the display. The image must be stored as a bitmask
+ *                byte array in images.h
+ * Input: img - the name of the image
+ * Output: None
+ */
+
+void Draw_Image_Fullscreen(uint8_t image);

@@ -119,7 +119,7 @@ digitalWrite(Epaper_DC,LOW);  // D/C#   0:command  1:data
 }
 
 /*
-* Function name: Epaper_Write_Command
+* Function name: Epaper_Write_Data
  * Description : Write data
  * Enter :cmd
  * Output : None
@@ -153,7 +153,7 @@ void Epaper_Update(void)
 
 /*
 * Function name: Epaper_DeepSleep
- * Description : Electronic Paper Deep Sleep Mode
+ * Description : Enter deep sleep mode
  * Enter : None
  * Output : None
  */	
